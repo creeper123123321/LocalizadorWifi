@@ -73,10 +73,10 @@ void loop() {
     if (n >= 3) break;
   }
 
-  location_t loc = location.getGeoFromWiFi();
-
   Serial.println("Location request data:");
   Serial.println(location.getSurroundingWiFiJson());
+
+  location_t loc = location.getGeoFromWiFi();
   Serial.println("Location: " + String(loc.lat) + "," + String(loc.lon));
   Serial.println("Accuracy: " + String(loc.accuracy));
   Serial.println("Result: " + location.wlStatusStr(location.getStatus()));
@@ -85,5 +85,5 @@ void loop() {
     sendLocation(loc.lat, loc.lon);
   }
 
-  delay(10 * 60 * 1000);
+  delay(60 * 1000);
 }
