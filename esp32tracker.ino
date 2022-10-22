@@ -43,7 +43,7 @@ void sendLocation(float lat, float longit) {
   if (!sslClient.connect(host, 12388)) {
     Serial.println("Couldn't connect to server");
   }
-  sslClient.println("GET /sendLocation?id=test&lat=" + String(lat) + "&long=" + longit + " HTTP/1.1");
+  sslClient.println("GET /sendLocation?id=test&lat=" + String(lat, 7) + "&long=" + String(longit, 7) + " HTTP/1.1");
   sslClient.println("Host: " + String(host));
   sslClient.println("User-Agent: LocalizadorWifi");
   sslClient.println("Connection: close");
@@ -77,7 +77,7 @@ void loop() {
   Serial.println(location.getSurroundingWiFiJson());
 
   location_t loc = location.getGeoFromWiFi();
-  Serial.println("Location: " + String(loc.lat) + "," + String(loc.lon));
+  Serial.println("Location: " + String(loc.lat, 7) + "," + String(loc.lon, 7));
   Serial.println("Accuracy: " + String(loc.accuracy));
   Serial.println("Result: " + location.wlStatusStr(location.getStatus()));
 
