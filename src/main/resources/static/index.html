@@ -2,92 +2,42 @@
 <html lang="pt">
 <head>
     <title>LocalizadorWifi</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.2/leaflet.min.js" integrity="sha512-QPePsP1y4BuymxYZEuQdJ4dsUzZR9MmyrMOLK//zHK4ZoDfMA7zQOJefboRSIm6QKCfzC7djwDOO/+0f72w7Zg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.2/leaflet.min.css" integrity="sha512-ekzf1ud/EngtmWo8xbIkhtBQsSgkOhTyyD6AA6b/J4/YXTInuNgeKVQDCH/pysNYnrGgsZazWSuWsNtFKzHbmg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.2/leaflet.min.js"
+            integrity="sha512-QPePsP1y4BuymxYZEuQdJ4dsUzZR9MmyrMOLK//zHK4ZoDfMA7zQOJefboRSIm6QKCfzC7djwDOO/+0f72w7Zg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.1/dist/L.Control.Locate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.76.1/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.2/leaflet.min.css"
+          integrity="sha512-ekzf1ud/EngtmWo8xbIkhtBQsSgkOhTyyD6AA6b/J4/YXTInuNgeKVQDCH/pysNYnrGgsZazWSuWsNtFKzHbmg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+            integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <style>
-        #map, body, html { height: 100%; width: 100% }
+        #map, body, html {
+            height: 100%;
+            width: 100%
+        }
+
         body {
             font-family: sans-serif;
             display: flex;
             margin: 0;
             flex-direction: column;
         }
+
         #config {
             display: flex;
         }
     </style>
 </head>
 <body>
-    <div id="config">
-        <input type="checkbox" id="enableSound">
-        <label for="enableSound">Enable sound</label>
-    </div>
-    <div id="map"></div>
-    <script>
-        let userIcon = L.icon({
-            iconSize:   [32, 32], // size of the icon
-            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.9.1/icons/person-fill.svg"})
-        let busIcon = L.icon({
-            iconSize:   [32, 32], // size of the icon
-            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.9.1/icons/truck-front-fill.svg"})
-
-        let map = L.map('map')
-        map.locate({setView: true, maxZoom: 16})
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map)
-
-        map.on('locationfound', onLocationFound);
-        map.on('locationerror', it => console.log(it.message));
-
-        let userMarker = L.marker([0, 0], {icon: userIcon})
-            .addTo(map)
-        let userCircle = L.circle([0, 0], 0).addTo(map);
-
-        function onLocationFound(e) {
-            let radius = e.accuracy;
-            userMarker.setLatLng(e.latlng)
-            userMarker.bindPopup().bindPopup("You are within " + radius + " meters from this point")
-            userCircle.setLatLng(e.latlng)
-            userCircle.setRadius(radius)
-        }
-
-        let vehicleMarkers = {};
-        let synth = window.speechSynthesis;
-
-        setInterval(it => {
-            map.locate()
-            $.ajax("/getLocations",{
-                dataType: "json"
-            }).done(data => {
-                Object.entries(data).forEach(entry => {
-                    let name = entry[0];
-                    let info = entry[1];
-                    let marker = vehicleMarkers[name];
-                    if (marker == null) {
-                        vehicleMarkers[name] = L.marker([0, 0]).addTo(map);
-                        marker = vehicleMarkers[name]
-                    }
-                    marker.setLatLng([info.latitude, info.longitude]);
-                    marker.setIcon(busIcon)
-                    marker.bindPopup(name + " Last updated at: " + info.updatedAt)
-                })
-            })
-        }, 3000);
-
-        setInterval(() => {
-            Object.entries(vehicleMarkers).forEach(it => {
-                let dist = map.distance(it[1].getLatLng(), userMarker.getLatLng());
-                if (dist <= 200 && $("#enableSound").is(":checked")) {
-                    let utterance = new SpeechSynthesisUtterance(it[0] + " is near you");
-                    utterance.lang = "en";
-                    synth.speak(utterance);
-                }
-            });
-        }, 4000)
-    </script>
+<div id="config">
+    <input type="checkbox" id="enableSound">
+    <label for="enableSound">Enable sound</label>
+</div>
+<div id="map"></div>
+<script src="index.js"></script>
 </body>
 </html>

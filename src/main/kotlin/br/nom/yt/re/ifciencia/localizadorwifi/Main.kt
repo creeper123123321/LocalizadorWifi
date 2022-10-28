@@ -38,6 +38,7 @@ fun Application.module() {
     routing {
         static("/") {
             staticBasePackage = "static"
+            resources()
             defaultResource("index.html")
         }
         get("/sendLocation") {
